@@ -1,0 +1,13 @@
+version: '3'
+
+services:
+  pdnsmaster:
+    container_name: pdnsmanager
+    env_file: .env
+    image: alpine:3.9
+    build: "."
+    restart: always
+    ports:
+            - "9999:80"
+    networks:
+      - default

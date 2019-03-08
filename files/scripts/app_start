@@ -1,0 +1,17 @@
+#!/bin/sh
+
+for var in MYSQL_HOST MYSQL_DBNAME MYSQL_USER MYSQL_PASS MYSQL_PORT ;do
+	eval [ -n "\$$var" ] || { echo "Required variable $var is not set" ; exit 1; }
+done
+
+sed 	-e "s/%%MYSQL_HOST%%/$MYSQL_HOST/"			\
+	-e "s/%%MYSQL_DBNAME%%/$MYSQL_DBNAME/"			\
+	-e "s/%%MYSQL_USER%%/$MYSQL_USER/"			\
+	-e "s/%%MYSQL_PASS%%/$MYSQL_PASS/"			\
+	-e "s/%%MYSQL_PORT%%/$MYSQL_PORT/"			\
+	-r -i /var/www/html/backend/config/ConfigUser.php
+
+/usr/local/bin/dbsetup
+
+apachectl -d . -f httpd.conf -e info -DFOREGROUND ; sleep 60 
+

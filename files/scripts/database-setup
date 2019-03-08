@@ -1,0 +1,5 @@
+#!/bin/sh
+
+# check if the schema has already applied
+
+# create pdnsmanger admin user within database

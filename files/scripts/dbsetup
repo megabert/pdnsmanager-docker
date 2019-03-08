@@ -1,0 +1,118 @@
+#!/bin/bash
+
+SELF="$(basename $0)"
+export SELF
+
+for var in MYSQL_HOST MYSQL_DBNAME MYSQL_USER MYSQL_PASS MYSQL_PORT PDNSMANAGER_ADMIN_USER PDNSMANAGE_ADMIN_PASS AUTOEXTEND_DB_SCHEMA ;do
+        eval [ -n "\$$var" ] || { echo "Required variable $var is not set" ; exit 1; }
+done
+
+# --- global variables
+
+schema_version=""
+
+# ---
+
+export MYSQL_HOST MYSQL_DBNAME MYSQL_USER MYSQL_PASS MYSQL_PORT PDNSMANAGER_ADMIN_USER PDNSMANAGE_ADMIN_PASS
+
+mylog() {
+	echo "$SELF: $*" >&2
+}
+
+mysql_exec() {
+	mysql -u"$MYSQL_USER" -p"$MYSQL_PASS" -h "$MYSQL_HOST" -P "$MYSQL_PORT" -D "$MYSQL_DBNAME" --batch -N -s -e "$1" 
+}
+
+pdm_create_user() {
+	local pdm_user="$1"
+	local pdm_pass="$2"
+	mysql_exec "DELETE FROM users WHERE name = '$pdm_user';"
+	mysql_exec "INSERT INTO users(name,backend,type,password) VALUES('$pdm_user','native','admin','$(php -r "print password_hash('$pdm_pass',PASSWORD_DEFAULT);")');"
+}
+
+load_sql() {
+	local db="$1"
+	local command_file="$2"
+	mylog "loading sql file $command_file"
+	mysql -u"$MYSQL_USER" -p"$MYSQL_PASS" -h "$MYSQL_HOST"--database="$db" --batch <"$command_file"
+}
+
+table_exists() {
+	local db="$1"
+	local table="$2"
+
+	if mysql_exec "use $db; describe $table" &>/dev/null ; then
+		mylog "$db.$table does exist"
+		return 0
+	else
+		mylog "$db.$table does not exist"
+		return 1
+	fi
+
+}
+
+# if schema exists && schema == 6 : ok 			--> code 0 (ok, nothing to do)
+# if schema exists && schema <  6 : error  		--> code 8 (error, manual intervention required)
+# if schema exists && schema >  6 : ok 			--> code 1 (ok, nothing to do)
+# if schema not exists            : ok 			--> code 2 (ok, schema setup required) 
+# other value			  : error		--> code 9 (error, invalid schema value)
+
+pdm_schema_status() {
+
+	# global var!
+	schema_version="$(mysql_exec "SELECT value FROM options WHERE name='schema_version' LIMIT 1;" 2>/dev/null)"
+	mylog "Got schema_version $schema_version"
+
+	[ -z "$schema_version"  	] && return 2
+	[ $schema_version -eq 6 	] && return 0
+	[ $schema_version -gt 6 	] && return 1
+	[ $schema_version -lt 6 	] && return 8
+
+	mylog "don't know how to handle schema version: $schema_version"
+	return 9
+}
+
+pdm_schema_update_required() {
+	pdm_schema_status 
+	schema_status="$?"
+	[ "$schema_status" == "2" ] && return 0
+	return 1
+}
+
+pdm_schema_ok() {
+	pdm_schema_status
+	case "$?" in
+		0) return 0 ;;
+		1) return 0 ;;
+	esac
+	return 1
+}
+
+# --- start of main program ---
+
+if [ "$AUTOEXTEND_DB_SCHEMA" == "yes" ]; then
+	if pdm_schema_update_required ; then
+		mylog "DB schema update required, creating it due to AUTOEXTEND_DB_SCHEMA=$AUTOEXTEND_DB_SCHEMA"
+		load_sql "$MYSQL_DBNAME" /tmp/pdnsmanager_schema_v6_extensions.sql
+	else
+		mylog "DB schema update not required"
+	fi
+fi
+
+# have .my.cnf created for debugging purposes
+
+cat >$HOME/.my.cnf <<EOF
+[client]
+user=$MYSQL_USER
+password=$MYSQL_PASS
+host=$MYSQL_HOST
+database=$MYSQL_DBNAME
+EOF
+
+if pdm_schema_ok ;then 
+	mylog "Creating pdnsmanager admin user $PDNSMANAGER_ADMIN_USER"
+	pdm_create_user "$PDNSMANAGER_ADMIN_USER" "$PDNSMANAGER_ADMIN_PASS"
+else
+	mylog "DB schema not ok, not reate pdnsmanager admin user"
+fi
+
