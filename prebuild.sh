@@ -12,6 +12,8 @@ set_dockerfile_vars() {
 
 set_dockerfile_vars
 
+[ -d files/archive ] || mkdir files/archive 
+
 if ! [ -s files/archive/$PDNSMANAGER_ARCHIVE ] ; then
 	echo "Downloading $PDNSMANAGER_DOWNLOAD_URL..."
        	wget -q -O "files/archive/$PDNSMANAGER_ARCHIVE" "$PDNSMANAGER_DOWNLOAD_URL"
