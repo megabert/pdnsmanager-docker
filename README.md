@@ -42,5 +42,5 @@ docker logs pdnsmanager
 docker ps
 ```
 
-- login to pdnsmanager at the ip of your host and port 9999 use the password configured in the .env file and the variables $PDNSMANAGER_ADMIN_USER $PDNSMANAGER_ADMIN_PASS
+- login to pdnsmanager at the ip of your Host and Port 9999, use the credentials configured in the .env file with the variables $PDNSMANAGER_ADMIN_USER and $PDNSMANAGER_ADMIN_PASS
 
