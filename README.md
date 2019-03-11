@@ -2,7 +2,7 @@
 
 ## General
 
-This repository creates a docker container for an existing powerdns server for [the pdnsmanager gui](https://github.com/loewexy/pdnsmanager). It creates the schema_extensions for your
+This repository creates a docker container for an existing powerdns server for the [pdnsmanager gui](https://github.com/loewexy/pdnsmanager). It creates the schema_extensions for your
 existing powerdns database. Have good backups if you plan to apply it at your existing powerdns database. Use at your
 own risk.
 
