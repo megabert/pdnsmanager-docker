@@ -9,7 +9,7 @@ return [
         'port'     => '%%MYSQL_PORT%%' 
     ],
     'logging' => [
-        'level' => 'debug',
+        'level' => 'warning',
         'path' => '/tmp/pdnsmanager.log'
     ]
 ];
