@@ -13,5 +13,5 @@ sed 	-e "s/%%MYSQL_HOST%%/$MYSQL_HOST/"			\
 
 /usr/local/bin/dbsetup
 
-apachectl -d . -f httpd.conf -e info -DFOREGROUND ; sleep 60 
-
+echo "Starting apache..."
+exec "$@"

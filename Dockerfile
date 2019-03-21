@@ -20,4 +20,5 @@ COPY files/conf/ConfigUser.php /var/www/html/backend/config
 RUN chown apache:apache -R /var/www/html
 
 WORKDIR /etc/apache2
-CMD /usr/local/bin/app_start
+ENTRYPOINT [ "/usr/local/bin/app_start" ]
+CMD [ "apachectl", "-d", ".", "-f", "httpd.conf", "-e", "info", "-DFOREGROUND" ]
