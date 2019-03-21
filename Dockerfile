@@ -9,8 +9,8 @@ COPY files/scripts/pdnsmanager_schema_v6_extensions.sql /tmp/pdnsmanager_schema_
 COPY files/scripts/app_start /usr/local/bin/app_start
 COPY files/scripts/dbsetup /usr/local/bin/dbsetup
 
-RUN apk add apache2 apache2-ctl php7-apache2 php7 php7-mysqli php7-pdo php7-pdo_mysql php7-json php7-pecl-apcu mariadb-client bash
-RUN mkdir /var/www/html ; \
+RUN apk add apache2 apache2-ctl php7-apache2 php7 php7-mysqli php7-pdo php7-pdo_mysql php7-json php7-pecl-apcu mariadb-client bash ; \
+    mkdir /var/www/html ; \
     tar -C /var/www/html --strip-components=1 -xzf /tmp/$PDNSMANAGER_ARCHIVE pdnsmanager-${PDNSMANAGER_VERSION}/backend  pdnsmanager-${PDNSMANAGER_VERSION}/frontend ; \
     chown apache:apache -R /var/www/html ; \
     rm -f /tmp/$PDNSMANAGER_ARCHIVE ; \
